@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心屿学院 - 学生登录</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- API配置和封装 -->
+    <script src="frontend/config.js"></script>
+    <script src="frontend/api.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #5B7FFF;
+            --secondary-color: #7B68EE;
+            --success-color: #00C48C;
+            --warning-color: #FFA940;
+            --danger-color: #FF4D6D;
+            --dark-color: #1A1D2E;
+            --light-color: #F8F9FA;
+            --border-color: #E1E8ED;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--dark-color);
+            min-height: 100vh;
+            line-height: 1.6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 480px;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .auth-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: white;
+        }
+
+        .auth-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 8px;
+        }
+
+        .auth-subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(91, 127, 255, 0.1);
+            color: var(--primary-color);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+            background: var(--light-color);
+            padding: 6px;
+            border-radius: 12px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .auth-tab.active {
+            background: white;
+            color: var(--primary-color);
+            box-shadow: var(--shadow);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 14px;
+        }
+
+        .form-input-group {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            padding-left: 48px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(91, 127, 255, 0.1);
+        }
+
+        .form-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 18px;
+        }
+
+        .form-input:focus + .form-icon {
+            color: var(--primary-color);
+        }
+
+        .verification-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .verification-group .form-input-group {
+            flex: 1;
+        }
+
+        .send-code-btn {
+            padding: 14px 24px;
+            background: var(--light-color);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary-color);
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .send-code-btn:hover:not(:disabled) {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .send-code-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(91, 127, 255, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .form-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+            z-index: 10000;
+            min-width: 300px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .toast.warning {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .toast i {
+            font-size: 20px;
+        }
+
+        .toast.success i {
+            color: var(--success-color);
+        }
+
+        .toast.error i {
+            color: var(--danger-color);
+        }
+
+        .toast.warning i {
+            color: var(--warning-color);
+        }
+
+        @media (max-width: 768px) {
+            .auth-card {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <div class="role-badge">
+                <i class="fas fa-user-graduate"></i>
+                <span>学生端</span>
+            </div>
+            <h1 class="auth-title">心屿学院</h1>
+            <p class="auth-subtitle">青少年心理健康学习平台</p>
+        </div>
+
+        <div class="auth-tabs">
+            <button class="auth-tab active" onclick="switchAuthTab('login')">登录</button>
+            <button class="auth-tab" onclick="switchAuthTab('register')">注册</button>
+        </div>
+
+        <!-- 登录表单 -->
+        <form id="login-form" class="auth-form active" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label class="form-label">手机号</label>
+                <div class="form-input-group">
+                    <input type="tel" id="login-phone" class="form-input" placeholder="请输入手机号" required pattern="^1[3-9]\d{9}$">
+                    <i class="fas fa-phone form-icon"></i>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">密码</label>
+                <div class="form-input-group">
+                    <input type="password" id="login-password" class="form-input" placeholder="请输入密码" required>
+                    <i class="fas fa-lock form-icon"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="login-btn">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>登录</span>
+            </button>
+
+            <div class="form-footer">
+                还没有账号？<a href="#" onclick="switchAuthTab('register'); return false;">立即注册</a>
+            </div>
+        </form>
+
+        <!-- 注册表单 -->
+        <form id="register-form" class="auth-form" onsubmit="handleRegister(event)">
+            <div class="form-group">
+                <label class="form-label">手机号</label>
+                <div class="form-input-group">
+                    <input type="tel" id="register-phone" class="form-input" placeholder="请输入手机号" required pattern="^1[3-9]\d{9}$">
+                    <i class="fas fa-phone form-icon"></i>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">验证码</label>
+                <div class="verification-group">
+                    <div class="form-input-group">
+                        <input type="text" id="register-code" class="form-input" placeholder="请输入验证码" required maxlength="6">
+                        <i class="fas fa-shield-alt form-icon"></i>
+                    </div>
+                    <button type="button" class="send-code-btn" id="send-code-btn" onclick="sendVerificationCode()">
+                        发送验证码
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">用户名</label>
+                <div class="form-input-group">
+                    <input type="text" id="register-username" class="form-input" placeholder="请输入用户名" required minlength="2" maxlength="50">
+                    <i class="fas fa-user form-icon"></i>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">密码</label>
+                <div class="form-input-group">
+                    <input type="password" id="register-password" class="form-input" placeholder="请输入密码（至少6位）" required minlength="6">
+                    <i class="fas fa-lock form-icon"></i>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">确认密码</label>
+                <div class="form-input-group">
+                    <input type="password" id="register-password-confirm" class="form-input" placeholder="请再次输入密码" required minlength="6">
+                    <i class="fas fa-lock form-icon"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="register-btn">
+                <i class="fas fa-user-plus"></i>
+                <span>注册</span>
+            </button>
+
+            <div class="form-footer">
+                已有账号？<a href="#" onclick="switchAuthTab('login'); return false;">立即登录</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // ================ 全局变量 ================
+        let currentUser = null;
+        let codeCountdown = 0;
+        let codeTimer = null;
+
+        // ================ 后端连接诊断 ================
+        async function testBackendConnection() {
+            console.log('=== 后端连接诊断 ===');
+            console.log('配置的 API BASE_URL:', CONFIG?.API?.BASE_URL || '未配置');
+            console.log('实际使用的 baseURL:', api?.baseURL || '未初始化');
+            
+            // 测试健康检查接口
+            const healthUrl = CONFIG?.API?.BASE_URL?.replace('/api', '') + '/health' || 
+                            api?.baseURL?.replace('/api', '') + '/health' ||
+                            'https://heartland-backend.onrender.com/health';
+            
+            console.log('测试健康检查 URL:', healthUrl);
+            
+            try {
+                const response = await fetch(healthUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ 后端服务正常:', data);
+                    return true;
+                } else {
+                    console.error('❌ 后端响应错误:', response.status, response.statusText);
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ 无法连接到后端:', error.message);
+                console.error('请检查:');
+                console.error('1. Render 服务是否正在运行');
+                console.error('2. URL 是否正确:', healthUrl);
+                console.error('3. 网络连接是否正常');
+                return false;
+            }
+        }
+
+        // ================ 页面初始化 ================
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 测试后端连接
+            await testBackendConnection();
+            
+            // 检查是否已登录
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                    if (userData.id && userData.role === 'student') {
+                        currentUser = userData;
+                        // 跳转到学生主界面
+                        redirectToApp();
+                    }
+                } catch (error) {
+                    console.error('Token 验证失败:', error);
+                }
+            }
+        });
+
+        // ================ 认证相关函数 ================
+        function switchAuthTab(tab) {
+            // 切换标签样式
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 切换表单
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            if (tab === 'login') {
+                document.getElementById('login-form').classList.add('active');
+            } else {
+                document.getElementById('register-form').classList.add('active');
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const phone = document.getElementById('login-phone').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            // 验证手机号
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                showToast('请输入有效的手机号', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('login-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>登录中...</span>';
+
+            try {
+                // 使用手机号登录
+                const response = await api.login({ phone, password });
+
+                if (response.success) {
+                    // 检查角色
+                    if (response.data.user.role !== 'student') {
+                        showToast('该账号不是学生账号，请使用正确的登录入口', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i><span>登录</span>';
+                        return;
+                    }
+
+                    // 保存用户信息
+                    localStorage.setItem('token', response.data.token);
+                    localStorage.setItem('user', JSON.stringify(response.data.user));
+                    currentUser = response.data.user;
+
+                    showToast('登录成功！', 'success');
+                    setTimeout(() => {
+                        redirectToApp();
+                    }, 500);
+                } else {
+                    showToast(response.message || '登录失败', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i><span>登录</span>';
+                }
+            } catch (error) {
+                console.error('登录失败:', error);
+                console.error('错误详情:', {
+                    message: error.message,
+                    status: error.status,
+                    url: api?.baseURL + '/auth/login',
+                    config: CONFIG?.API?.BASE_URL
+                });
+                
+                let errorMessage = '登录失败，请检查网络连接';
+                if (error.message) {
+                    errorMessage = error.message;
+                } else if (error.status === 0) {
+                    errorMessage = '无法连接到服务器，请检查后端服务是否运行';
+                }
+                
+                showToast(errorMessage, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i><span>登录</span>';
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+
+            const phone = document.getElementById('register-phone').value.trim();
+            const code = document.getElementById('register-code').value.trim();
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value;
+            const passwordConfirm = document.getElementById('register-password-confirm').value;
+
+            // 验证
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                showToast('请输入有效的手机号', 'error');
+                return;
+            }
+
+            if (code.length !== 6) {
+                showToast('请输入6位验证码', 'error');
+                return;
+            }
+
+            if (username.length < 2 || username.length > 50) {
+                showToast('用户名长度应在2-50个字符之间', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showToast('密码长度至少为6位', 'error');
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                showToast('两次输入的密码不一致', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('register-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>注册中...</span>';
+
+            try {
+                const registerData = {
+                    phone,
+                    username,
+                    password,
+                    verificationCode: code,
+                    role: 'student'
+                };
+
+                const response = await api.register(registerData);
+
+                if (response.success) {
+                    showToast('注册成功！正在自动登录...', 'success');
+
+                    // 保存用户信息
+                    localStorage.setItem('token', response.data.token);
+                    localStorage.setItem('user', JSON.stringify(response.data.user));
+                    currentUser = response.data.user;
+
+                    setTimeout(() => {
+                        redirectToApp();
+                    }, 1000);
+                } else {
+                    showToast(response.message || '注册失败', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-user-plus"></i><span>注册</span>';
+                }
+            } catch (error) {
+                console.error('注册失败:', error);
+                console.error('错误详情:', {
+                    message: error.message,
+                    status: error.status,
+                    url: api?.baseURL + '/auth/register',
+                    config: CONFIG?.API?.BASE_URL
+                });
+                
+                let errorMessage = '注册失败，请检查网络连接';
+                if (error.message) {
+                    errorMessage = error.message;
+                } else if (error.status === 0) {
+                    errorMessage = '无法连接到服务器，请检查后端服务是否运行';
+                }
+                
+                showToast(errorMessage, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-plus"></i><span>注册</span>';
+            }
+        }
+
+        async function sendVerificationCode() {
+            const phone = document.getElementById('register-phone').value.trim();
+
+            if (!phone) {
+                showToast('请先输入手机号', 'error');
+                return;
+            }
+
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                showToast('请输入有效的手机号', 'error');
+                return;
+            }
+
+            if (codeCountdown > 0) {
+                return;
+            }
+
+            const btn = document.getElementById('send-code-btn');
+            btn.disabled = true;
+
+            try {
+                const response = await api.post('/auth/send-code', { phone });
+
+                if (response.success) {
+                    showToast('验证码已发送（演示版本：123456）', 'success');
+                    startCodeCountdown();
+                } else {
+                    showToast(response.message || '发送验证码失败', 'error');
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error('发送验证码失败:', error);
+                showToast('发送验证码失败', 'error');
+                btn.disabled = false;
+            }
+        }
+
+        function startCodeCountdown() {
+            codeCountdown = 60;
+            const btn = document.getElementById('send-code-btn');
+
+            codeTimer = setInterval(() => {
+                codeCountdown--;
+                btn.textContent = `${codeCountdown}秒后重试`;
+
+                if (codeCountdown <= 0) {
+                    clearInterval(codeTimer);
+                    btn.disabled = false;
+                    btn.textContent = '发送验证码';
+                }
+            }, 1000);
+        }
+
+        // ================ 页面跳转 ================
+        function redirectToApp() {
+            // 检查是否完成分院测试
+            if (!currentUser.sorting_completed) {
+                showToast(`欢迎，${currentUser.username}！让我们先完成分院测试...`, 'success');
+                setTimeout(() => {
+                    window.location.href = 'sorting-hat.html';
+                }, 1500);
+            } else {
+                showToast(`欢迎回来，${currentUser.username}！`, 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            }
+        }
+
+        // ================ Toast 提示 ================
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'exclamation-circle'}"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // ================ 错误处理 ================
+        window.addEventListener('error', (event) => {
+            console.error('全局错误:', event.error);
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('未处理的 Promise 错误:', event.reason);
+        });
+    </script>
+</body>
+</html>

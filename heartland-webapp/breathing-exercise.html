@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>呼吸训练 - 心屿学院</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 20px;
+            margin-bottom: 60px;
+            opacity: 0.9;
+        }
+
+        /* 呼吸圆圈 */
+        .breathing-circle-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 60px;
+        }
+
+        .breathing-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.4));
+            box-shadow: 
+                0 0 60px rgba(102, 126, 234, 0.6),
+                0 0 120px rgba(118, 75, 162, 0.4),
+                inset 0 0 60px rgba(255, 255, 255, 0.1);
+            transition: all 4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .breathing-circle.inhale {
+            transform: scale(1.5);
+            box-shadow: 
+                0 0 100px rgba(102, 126, 234, 0.8),
+                0 0 200px rgba(118, 75, 162, 0.6),
+                inset 0 0 80px rgba(255, 255, 255, 0.2);
+        }
+
+        .breathing-circle.exhale {
+            transform: scale(0.8);
+            box-shadow: 
+                0 0 40px rgba(102, 126, 234, 0.4),
+                0 0 80px rgba(118, 75, 162, 0.2),
+                inset 0 0 40px rgba(255, 255, 255, 0.05);
+        }
+
+        .instruction {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            min-height: 40px;
+        }
+
+        .counter {
+            font-size: 24px;
+            opacity: 0.8;
+            margin-bottom: 40px;
+        }
+
+        /* 控制按钮 */
+        .controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 15px 40px;
+            border-radius: 50px;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .control-btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+        }
+
+        .control-btn.primary:hover {
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 模式选择 */
+        .modes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto 40px;
+        }
+
+        .mode-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-5px);
+        }
+
+        .mode-card.active {
+            background: rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+
+        .mode-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .mode-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .mode-desc {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* 统计 */
+        .stats {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* 粒子背景 */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: float 10s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(50px);
+                opacity: 0;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i> 返回
+    </button>
+
+    <!-- 粒子背景 -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <!-- 模式选择页面 -->
+        <div id="modeSelection">
+            <h1>🌬️ 呼吸训练</h1>
+            <p class="subtitle">选择适合你的呼吸练习</p>
+
+            <div class="modes">
+                <div class="mode-card active" onclick="selectMode('calm')">
+                    <div class="mode-icon">😌</div>
+                    <div class="mode-name">平静呼吸</div>
+                    <div class="mode-desc">4-4-4 节奏<br>适合放松和减压</div>
+                </div>
+
+                <div class="mode-card" onclick="selectMode('focus')">
+                    <div class="mode-icon">🎯</div>
+                    <div class="mode-name">专注呼吸</div>
+                    <div class="mode-desc">4-7-8 节奏<br>提升专注力</div>
+                </div>
+
+                <div class="mode-card" onclick="selectMode('energy')">
+                    <div class="mode-icon">⚡</div>
+                    <div class="mode-name">活力呼吸</div>
+                    <div class="mode-desc">3-0-3 节奏<br>快速提神醒脑</div>
+                </div>
+
+                <div class="mode-card" onclick="selectMode('sleep')">
+                    <div class="mode-icon">😴</div>
+                    <div class="mode-name">助眠呼吸</div>
+                    <div class="mode-desc">4-7-8 节奏<br>帮助入睡</div>
+                </div>
+            </div>
+
+            <button class="control-btn primary" onclick="startExercise()">
+                <i class="fas fa-play"></i> 开始练习
+            </button>
+
+            <!-- 统计 -->
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalSessions">0</div>
+                    <div class="stat-label">总练习次数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalMinutes">0</div>
+                    <div class="stat-label">总练习分钟</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="todaySessions">0</div>
+                    <div class="stat-label">今日练习</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 呼吸练习页面 -->
+        <div id="exerciseScreen" class="hidden">
+            <h1 id="modeName">平静呼吸</h1>
+            <p class="subtitle" id="modeDescription">跟随圆圈的节奏呼吸</p>
+
+            <div class="breathing-circle-container">
+                <div class="breathing-circle" id="breathingCircle"></div>
+            </div>
+
+            <div class="instruction" id="instruction">准备开始...</div>
+            <div class="counter" id="counter">已完成 0 个循环</div>
+
+            <div class="controls">
+                <button class="control-btn" onclick="pauseExercise()">
+                    <i class="fas fa-pause"></i> 暂停
+                </button>
+                <button class="control-btn" onclick="stopExercise()">
+                    <i class="fas fa-stop"></i> 结束
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'calm';
+        let isExercising = false;
+        let isPaused = false;
+        let cycleCount = 0;
+        let exerciseInterval = null;
+        let startTime = null;
+
+        const modes = {
+            calm: {
+                name: '平静呼吸',
+                description: '4-4-4 节奏，适合放松和减压',
+                inhale: 4,
+                hold: 4,
+                exhale: 4,
+                icon: '😌'
+            },
+            focus: {
+                name: '专注呼吸',
+                description: '4-7-8 节奏，提升专注力',
+                inhale: 4,
+                hold: 7,
+                exhale: 8,
+                icon: '🎯'
+            },
+            energy: {
+                name: '活力呼吸',
+                description: '3-0-3 节奏，快速提神醒脑',
+                inhale: 3,
+                hold: 0,
+                exhale: 3,
+                icon: '⚡'
+            },
+            sleep: {
+                name: '助眠呼吸',
+                description: '4-7-8 节奏，帮助入睡',
+                inhale: 4,
+                hold: 7,
+                exhale: 8,
+                icon: '😴'
+            }
+        };
+
+        // 页面加载
+        window.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+            loadStats();
+        });
+
+        // 创建粒子
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // 选择模式
+        function selectMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.target.closest('.mode-card').classList.add('active');
+        }
+
+        // 开始练习
+        function startExercise() {
+            document.getElementById('modeSelection').classList.add('hidden');
+            document.getElementById('exerciseScreen').classList.remove('hidden');
+
+            const mode = modes[currentMode];
+            document.getElementById('modeName').textContent = mode.icon + ' ' + mode.name;
+            document.getElementById('modeDescription').textContent = mode.description;
+
+            isExercising = true;
+            isPaused = false;
+            cycleCount = 0;
+            startTime = Date.now();
+
+            runBreathingCycle();
+        }
+
+        // 运行呼吸循环
+        async function runBreathingCycle() {
+            if (!isExercising || isPaused) return;
+
+            const mode = modes[currentMode];
+            const circle = document.getElementById('breathingCircle');
+            const instruction = document.getElementById('instruction');
+
+            // 吸气
+            instruction.textContent = `吸气 (${mode.inhale}秒)`;
+            circle.classList.remove('exhale');
+            circle.classList.add('inhale');
+            await sleep(mode.inhale * 1000);
+
+            if (!isExercising || isPaused) return;
+
+            // 屏息
+            if (mode.hold > 0) {
+                instruction.textContent = `屏息 (${mode.hold}秒)`;
+                circle.classList.remove('inhale', 'exhale');
+                await sleep(mode.hold * 1000);
+            }
+
+            if (!isExercising || isPaused) return;
+
+            // 呼气
+            instruction.textContent = `呼气 (${mode.exhale}秒)`;
+            circle.classList.remove('inhale');
+            circle.classList.add('exhale');
+            await sleep(mode.exhale * 1000);
+
+            if (!isExercising || isPaused) return;
+
+            // 完成一个循环
+            cycleCount++;
+            document.getElementById('counter').textContent = `已完成 ${cycleCount} 个循环`;
+
+            // 继续下一个循环
+            runBreathingCycle();
+        }
+
+        // 暂停练习
+        function pauseExercise() {
+            if (isPaused) {
+                isPaused = false;
+                event.target.innerHTML = '<i class="fas fa-pause"></i> 暂停';
+                runBreathingCycle();
+            } else {
+                isPaused = true;
+                event.target.innerHTML = '<i class="fas fa-play"></i> 继续';
+                document.getElementById('instruction').textContent = '已暂停';
+            }
+        }
+
+        // 结束练习
+        function stopExercise() {
+            if (!confirm('确定要结束练习吗？')) {
+                return;
+            }
+
+            isExercising = false;
+            isPaused = false;
+
+            // 计算练习时长
+            const duration = Math.floor((Date.now() - startTime) / 1000 / 60);
+
+            // 保存统计
+            saveSession(duration);
+
+            // 显示完成提示
+            alert(`练习完成！\n\n完成 ${cycleCount} 个呼吸循环\n练习时长: ${duration} 分钟`);
+
+            // 返回模式选择
+            document.getElementById('exerciseScreen').classList.add('hidden');
+            document.getElementById('modeSelection').classList.remove('hidden');
+
+            // 重置
+            cycleCount = 0;
+            document.getElementById('breathingCircle').classList.remove('inhale', 'exhale');
+        }
+
+        // 加载统计
+        function loadStats() {
+            const totalSessions = parseInt(localStorage.getItem('breathing_total_sessions') || '0');
+            const totalMinutes = parseInt(localStorage.getItem('breathing_total_minutes') || '0');
+
+            const today = new Date().toDateString();
+            const savedDate = localStorage.getItem('breathing_date');
+            let todaySessions = 0;
+
+            if (savedDate === today) {
+                todaySessions = parseInt(localStorage.getItem('breathing_today_sessions') || '0');
+            } else {
+                localStorage.setItem('breathing_date', today);
+                localStorage.setItem('breathing_today_sessions', '0');
+            }
+
+            document.getElementById('totalSessions').textContent = totalSessions;
+            document.getElementById('totalMinutes').textContent = totalMinutes;
+            document.getElementById('todaySessions').textContent = todaySessions;
+        }
+
+        // 保存会话
+        function saveSession(minutes) {
+            // 总统计
+            const totalSessions = parseInt(localStorage.getItem('breathing_total_sessions') || '0');
+            const totalMinutes = parseInt(localStorage.getItem('breathing_total_minutes') || '0');
+            localStorage.setItem('breathing_total_sessions', totalSessions + 1);
+            localStorage.setItem('breathing_total_minutes', totalMinutes + minutes);
+
+            // 今日统计
+            const todaySessions = parseInt(localStorage.getItem('breathing_today_sessions') || '0');
+            localStorage.setItem('breathing_today_sessions', todaySessions + 1);
+
+            loadStats();
+        }
+
+        // 返回
+        function goBack() {
+            if (isExercising && !confirm('正在练习中，确定要离开吗？')) {
+                return;
+            }
+            window.location.href = 'student-dashboard.html';
+        }
+
+        // 辅助函数
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // 页面关闭前提示
+        window.addEventListener('beforeunload', (e) => {
+            if (isExercising) {
+                e.preventDefault();
+                e.returnValue = '正在练习中，确定要离开吗？';
+            }
+        });
+    </script>
+</body>
+</html>
+
+

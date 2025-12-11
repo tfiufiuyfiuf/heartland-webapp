@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生主页 - 心屿学院</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- API配置和封装 -->
+    <script src="frontend/config.js"></script>
+    <script src="frontend/api.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #00C48C;
+            --warning-color: #FFA940;
+            --danger-color: #FF4D6D;
+            --dark-color: #2c3e50;
+            --light-bg: #f5f7fa;
+            --sidebar-width: 280px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: var(--light-bg);
+            color: var(--dark-color);
+        }
+
+        /* 布局 */
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .logo {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .user-profile {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .user-profile:hover {
+            background: #f8f9fa;
+        }
+
+        .user-avatar-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 15px;
+        }
+
+        .user-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .user-house {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--dark-color);
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: #f8f9fa;
+            color: var(--primary-color);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, transparent 100%);
+            color: var(--primary-color);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 30px;
+        }
+
+        /* 顶部栏 */
+        .top-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .icon-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .icon-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .icon-btn .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger-color);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 内容区域 */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+        }
+
+        /* 主要内容 */
+        .main-section {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 侧边栏区域 */
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 通知区域 */
+        .notifications-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 15px;
+            border-left: 3px solid var(--primary-color);
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .notification-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .notification-item.unread {
+            background: #e8f4f8;
+            border-left-color: var(--warning-color);
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--dark-color);
+        }
+
+        .notification-content {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: #95a5a6;
+        }
+
+        /* 页面内容 */
+        .page-content {
+            display: none;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        /* 按钮 */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .stat-icon.primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .stat-icon.success { background: linear-gradient(135deg, #00C48C, #00a896); color: white; }
+        .stat-icon.warning { background: linear-gradient(135deg, #FFA940, #ff8c00); color: white; }
+        .stat-icon.danger { background: linear-gradient(135deg, #FF4D6D, #e63946); color: white; }
+
+        .stat-info h3 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">🏰</div>
+                <div class="logo-text">心屿学院</div>
+            </div>
+
+            <div class="user-profile" onclick="showPage('profile')">
+                <div class="user-avatar-large" id="userAvatar">👤</div>
+                <div class="user-name" id="userName">加载中...</div>
+                <div class="user-house" id="userHouse">未分配学院</div>
+            </div>
+
+            <nav class="nav-menu">
+                <div class="nav-item active" onclick="showPage('dashboard')">
+                    <i class="fas fa-home"></i>
+                    <span>首页</span>
+                </div>
+                <div class="nav-item" onclick="showPage('classroom')">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>直播教室</span>
+                </div>
+                <div class="nav-item" onclick="showPage('courses')">
+                    <i class="fas fa-book"></i>
+                    <span>课程中心</span>
+                </div>
+                <div class="nav-item" onclick="window.location.href='mood-diary.html'">
+                    <i class="fas fa-book-open"></i>
+                    <span>情绪日记</span>
+                </div>
+                <div class="nav-item" onclick="showPage('ai')">
+                    <i class="fas fa-robot"></i>
+                    <span>AI 助教</span>
+                </div>
+                <div class="nav-item" onclick="showPage('community')">
+                    <i class="fas fa-users"></i>
+                    <span>社区</span>
+                </div>
+                <div class="nav-item" onclick="window.location.href='study-room.html'">
+                    <i class="fas fa-book-reader"></i>
+                    <span>自习室</span>
+                </div>
+                <div class="nav-item" onclick="window.location.href='breathing-exercise.html'">
+                    <i class="fas fa-wind"></i>
+                    <span>呼吸训练</span>
+                </div>
+                <div class="nav-item" onclick="showPage('settings')">
+                    <i class="fas fa-cog"></i>
+                    <span>设置</span>
+                </div>
+                <div class="nav-item" onclick="handleLogout()" style="color: var(--danger-color);">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>退出登录</span>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部栏 -->
+            <div class="top-bar">
+                <h1 class="page-title" id="pageTitle">首页</h1>
+                <div class="top-actions">
+                    <button class="icon-btn" onclick="showNotifications()" title="通知">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge" id="notificationBadge">0</span>
+                    </button>
+                    <button class="icon-btn" onclick="showPage('settings')" title="设置">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button class="icon-btn" onclick="showPage('profile')" title="个人中心">
+                        <i class="fas fa-user"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="main-section">
+                    <!-- 首页内容 -->
+                    <div class="page-content active" id="page-dashboard">
+                        <!-- 统计卡片 -->
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon primary">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3 id="statCourses">0</h3>
+                                    <p>已学课程</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon success">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3 id="statPoints">0</h3>
+                                    <p>学院积分</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon warning">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3 id="statStreak">0</h3>
+                                    <p>连续打卡</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon danger">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3 id="statFocusTime">0h</h3>
+                                    <p>专注时长</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 快捷入口 -->
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fas fa-rocket"></i> 快捷入口
+                            </h2>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                                <button class="btn btn-primary" onclick="showPage('classroom')">
+                                    <i class="fas fa-chalkboard-teacher"></i> 进入教室
+                                </button>
+                                <button class="btn btn-primary" onclick="window.location.href='mood-diary.html'">
+                                    <i class="fas fa-book-open"></i> 情绪日记
+                                </button>
+                                <button class="btn btn-primary" onclick="showPage('ai')">
+                                    <i class="fas fa-robot"></i> AI 助教
+                                </button>
+                                <button class="btn btn-primary" onclick="window.location.href='breathing-exercise.html'">
+                                    <i class="fas fa-wind"></i> 呼吸训练
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 直播教室页面 -->
+                    <div class="page-content" id="page-classroom">
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fas fa-chalkboard-teacher"></i> 直播教室
+                            </h2>
+                            <p style="color: #7f8c8d; margin-bottom: 20px;">实时在线课堂，与老师和同学互动学习</p>
+                            
+                            <!-- 课程表 -->
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                                <h3 style="margin-bottom: 15px;">📅 本周课程表</h3>
+                                <div id="scheduleList">
+                                    <p style="color: #95a5a6;">暂无课程安排</p>
+                                </div>
+                            </div>
+
+                            <!-- 直播间占位 -->
+                            <div style="background: #000; aspect-ratio: 16/9; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
+                                <div style="text-align: center;">
+                                    <i class="fas fa-video" style="font-size: 48px; margin-bottom: 15px;"></i>
+                                    <p>直播教室（待接入直播服务）</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI 助教页面 -->
+                    <div class="page-content" id="page-ai">
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fas fa-robot"></i> AI 助教
+                            </h2>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div style="border: 2px solid var(--primary-color); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer;" onclick="openAIChat('learning')">
+                                    <div style="font-size: 48px; margin-bottom: 15px;">📚</div>
+                                    <h3 style="margin-bottom: 10px;">学习助教</h3>
+                                    <p style="color: #7f8c8d;">帮助解答学习问题</p>
+                                </div>
+                                <div style="border: 2px solid var(--success-color); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer;" onclick="openAIChat('psychology')">
+                                    <div style="font-size: 48px; margin-bottom: 15px;">💝</div>
+                                    <h3 style="margin-bottom: 10px;">心理助教</h3>
+                                    <p style="color: #7f8c8d;">提供心理健康支持</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 个人中心页面 -->
+                    <div class="page-content" id="page-profile">
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fas fa-user"></i> 个人中心
+                            </h2>
+                            <div id="profileContent">
+                                <p>加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 设置页面 -->
+                    <div class="page-content" id="page-settings">
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fas fa-cog"></i> 设置
+                            </h2>
+                            <div style="display: flex; flex-direction: column; gap: 20px;">
+                                <div style="padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                                    <h3 style="margin-bottom: 15px;">账号设置</h3>
+                                    <button class="btn btn-primary">修改密码</button>
+                                </div>
+                                <div style="padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                                    <h3 style="margin-bottom: 15px;">通知设置</h3>
+                                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                        <input type="checkbox" checked> 上课提醒
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                        <input type="checkbox" checked> 作业提醒
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" checked> 系统通知
+                                    </label>
+                                </div>
+                                <div style="padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                                    <h3 style="margin-bottom: 15px;">隐私设置</h3>
+                                    <label style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" checked> 允许他人查看我的学习进度
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 其他页面占位 -->
+                    <div class="page-content" id="page-courses">
+                        <div class="card">
+                            <h2 class="card-title">课程中心</h2>
+                            <p>课程功能开发中...</p>
+                        </div>
+                    </div>
+
+                    <div class="page-content" id="page-community">
+                        <div class="card">
+                            <h2 class="card-title">社区</h2>
+                            <p>社区功能开发中...</p>
+                        </div>
+                    </div>
+
+                    <div class="page-content" id="page-study-room">
+                        <div class="card">
+                            <h2 class="card-title">自习室</h2>
+                            <p>自习室功能开发中...</p>
+                        </div>
+                    </div>
+
+                    <div class="page-content" id="page-breathing">
+                        <div class="card">
+                            <h2 class="card-title">呼吸训练</h2>
+                            <p>呼吸训练功能开发中...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 侧边栏区域 -->
+                <div class="sidebar-section">
+                    <!-- 通知面板 -->
+                    <div class="notifications-panel">
+                        <h3 style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                            <span><i class="fas fa-bell"></i> 通知提醒</span>
+                            <span style="font-size: 12px; color: #95a5a6; cursor: pointer;" onclick="markAllRead()">全部已读</span>
+                        </h3>
+                        <div id="notificationsList">
+                            <div class="notification-item unread">
+                                <div class="notification-title">📚 新课程上线</div>
+                                <div class="notification-content">《情绪管理进阶》课程已上线</div>
+                                <div class="notification-time">2分钟前</div>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-title">⏰ 上课提醒</div>
+                                <div class="notification-content">心理健康课将在10分钟后开始</div>
+                                <div class="notification-time">8分钟前</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 今日课程 -->
+                    <div class="card">
+                        <h3 style="margin-bottom: 15px;">
+                            <i class="fas fa-calendar-day"></i> 今日课程
+                        </h3>
+                        <div id="todayClasses">
+                            <p style="color: #95a5a6; text-align: center; padding: 20px;">今天没有课程安排</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        // 页面初始化
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 检查登录状态
+            const token = localStorage.getItem('heartland_token');
+            const userData = localStorage.getItem('heartland_user');
+            
+            if (!token || !userData) {
+                window.location.href = 'student-login.html';
+                return;
+            }
+
+            currentUser = JSON.parse(userData);
+            
+            // 更新用户信息显示
+            document.getElementById('userName').textContent = currentUser.username;
+            document.getElementById('userAvatar').textContent = currentUser.avatar || '👤';
+            
+            if (currentUser.house && currentUser.house !== 'none') {
+                const houseNames = {
+                    gryffindor: '格兰芬多 🦁',
+                    slytherin: '斯莱特林 🐍',
+                    ravenclaw: '拉文克劳 🦅',
+                    hufflepuff: '赫奇帕奇 🦡'
+                };
+                document.getElementById('userHouse').textContent = houseNames[currentUser.house] || '未分配学院';
+            }
+
+            // 加载统计数据
+            await loadStats();
+            
+            // 加载通知
+            await loadNotifications();
+        });
+
+        // 切换页面
+        function showPage(pageName) {
+            // 更新导航激活状态
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.nav-item')?.classList.add('active');
+
+            // 更新页面标题
+            const titles = {
+                dashboard: '首页',
+                classroom: '直播教室',
+                courses: '课程中心',
+                ai: 'AI 助教',
+                community: '社区',
+                'study-room': '自习室',
+                breathing: '呼吸训练',
+                profile: '个人中心',
+                settings: '设置'
+            };
+            document.getElementById('pageTitle').textContent = titles[pageName] || '首页';
+
+            // 切换页面内容
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(`page-${pageName}`)?.classList.add('active');
+
+            // 加载页面数据
+            if (pageName === 'profile') {
+                loadProfile();
+            }
+        }
+
+        // 加载统计数据
+        async function loadStats() {
+            try {
+                const response = await api.getUserStats();
+                if (response.success && response.data) {
+                    const stats = response.data;
+                    document.getElementById('statCourses').textContent = stats.coursesCompleted || 0;
+                    document.getElementById('statPoints').textContent = currentUser.points || 0;
+                    document.getElementById('statStreak').textContent = stats.streak || 0;
+                    const focusHours = Math.floor((currentUser.focus_time || 0) / 3600);
+                    document.getElementById('statFocusTime').textContent = focusHours + 'h';
+                }
+            } catch (error) {
+                console.error('加载统计失败:', error);
+            }
+        }
+
+        // 加载通知
+        async function loadNotifications() {
+            try {
+                const response = await api.getNotifications({ limit: 10 });
+                if (response.success && response.data) {
+                    const notifications = response.data.notifications || response.data;
+                    const unreadCount = notifications.filter(n => !n.is_read).length;
+                    document.getElementById('notificationBadge').textContent = unreadCount;
+                    
+                    // 渲染通知列表
+                    renderNotifications(notifications);
+                }
+            } catch (error) {
+                console.error('加载通知失败:', error);
+            }
+        }
+
+        // 渲染通知
+        function renderNotifications(notifications) {
+            const container = document.getElementById('notificationsList');
+            if (notifications.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #95a5a6; padding: 20px;">暂无通知</p>';
+                return;
+            }
+
+            container.innerHTML = notifications.map(n => {
+                const date = new Date(n.created_at);
+                const timeAgo = getTimeAgo(date);
+                return `
+                    <div class="notification-item ${n.is_read ? '' : 'unread'}" onclick="markRead('${n.id}')">
+                        <div class="notification-title">${n.title}</div>
+                        <div class="notification-content">${n.content}</div>
+                        <div class="notification-time">${timeAgo}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 标记已读
+        async function markRead(id) {
+            try {
+                await api.markNotificationRead(id);
+                await loadNotifications();
+            } catch (error) {
+                console.error('标记已读失败:', error);
+            }
+        }
+
+        // 全部标记已读
+        async function markAllRead() {
+            try {
+                await api.markAllNotificationsRead();
+                await loadNotifications();
+            } catch (error) {
+                console.error('标记失败:', error);
+            }
+        }
+
+        // 显示通知面板
+        function showNotifications() {
+            alert('通知功能已在右侧面板显示');
+        }
+
+        // 加载个人资料
+        async function loadProfile() {
+            try {
+                const response = await api.getCurrentUser();
+                if (response.success && response.data) {
+                    const user = response.data.user || response.data;
+                    const houseNames = {
+                        gryffindor: '格兰芬多 🦁',
+                        slytherin: '斯莱特林 🐍',
+                        ravenclaw: '拉文克劳 🦅',
+                        hufflepuff: '赫奇帕奇 🦡'
+                    };
+
+                    document.getElementById('profileContent').innerHTML = `
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div style="text-align: center; padding: 30px;">
+                                <div style="font-size: 80px; margin-bottom: 15px;">${user.avatar || '👤'}</div>
+                                <h2 style="margin-bottom: 10px;">${user.username}</h2>
+                                <p style="color: #7f8c8d;">${houseNames[user.house] || '未分配学院'}</p>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 32px; margin-bottom: 10px;">🏆</div>
+                                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 5px;">${user.points || 0}</div>
+                                    <div style="color: #7f8c8d;">积分</div>
+                                </div>
+                                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 32px; margin-bottom: 10px;">⭐</div>
+                                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 5px;">Lv.${user.level || 1}</div>
+                                    <div style="color: #7f8c8d;">等级</div>
+                                </div>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                                <h3 style="margin-bottom: 15px;">基本信息</h3>
+                                <p style="margin-bottom: 10px;"><strong>手机号：</strong>${user.phone || '未设置'}</p>
+                                <p style="margin-bottom: 10px;"><strong>邮箱：</strong>${user.email || '未设置'}</p>
+                                <p><strong>注册时间：</strong>${new Date(user.created_at).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('加载个人资料失败:', error);
+            }
+        }
+
+        // 打开 AI 对话
+        function openAIChat(type) {
+            alert(`AI ${type === 'learning' ? '学习' : '心理'}助教功能已预留接口，待接入真实AI模型`);
+        }
+
+        // 退出登录
+        function handleLogout() {
+            if (confirm('确定要退出登录吗？')) {
+                localStorage.removeItem('heartland_token');
+                localStorage.removeItem('heartland_user');
+                window.location.href = 'student-login.html';
+            }
+        }
+
+        // 时间格式化
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000);
+            
+            if (diff < 60) return '刚刚';
+            if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
+            return `${Math.floor(diff / 86400)}天前`;
+        }
+    </script>
+</body>
+</html>
+

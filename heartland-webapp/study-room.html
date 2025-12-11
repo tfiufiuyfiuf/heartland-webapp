@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专注自习室 - 心屿学院</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="frontend/config.js"></script>
+    <script src="frontend/api.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .timer-display {
+            font-size: 120px;
+            font-weight: 700;
+            margin: 40px 0;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .timer-label {
+            font-size: 24px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .preset-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+
+        .preset-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .preset-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .control-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            font-size: 32px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #00C48C, #00a896);
+            color: white;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(0, 196, 140, 0.4);
+        }
+
+        .pause-btn {
+            background: linear-gradient(135deg, #FFA940, #ff8c00);
+            color: white;
+        }
+
+        .pause-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(255, 169, 64, 0.4);
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #FF4D6D, #e63946);
+            color: white;
+        }
+
+        .reset-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(255, 77, 109, 0.4);
+        }
+
+        .stats {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .music-player {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .music-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .music-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .custom-time {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .custom-time input {
+            width: 80px;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .custom-time input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .motivational-quote {
+            margin-top: 30px;
+            font-size: 18px;
+            font-style: italic;
+            opacity: 0.8;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .timer-display.running {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i> 返回
+    </button>
+
+    <div class="container">
+        <h1 style="font-size: 36px; margin-bottom: 20px;">📚 专注自习室</h1>
+        <p class="timer-label" id="timerLabel">选择专注时长</p>
+
+        <!-- 预设时长 -->
+        <div class="preset-buttons">
+            <button class="preset-btn" onclick="setTime(25)">
+                <div style="font-size: 24px; margin-bottom: 5px;">🍅</div>
+                <div>25 分钟</div>
+                <div style="font-size: 12px; opacity: 0.7;">番茄工作法</div>
+            </button>
+            <button class="preset-btn" onclick="setTime(45)">
+                <div style="font-size: 24px; margin-bottom: 5px;">📖</div>
+                <div>45 分钟</div>
+                <div style="font-size: 12px; opacity: 0.7;">一节课</div>
+            </button>
+            <button class="preset-btn" onclick="setTime(60)">
+                <div style="font-size: 24px; margin-bottom: 5px;">⏰</div>
+                <div>60 分钟</div>
+                <div style="font-size: 12px; opacity: 0.7;">深度专注</div>
+            </button>
+        </div>
+
+        <!-- 自定义时长 -->
+        <div class="custom-time">
+            <input type="number" id="customMinutes" placeholder="分钟" min="1" max="180">
+            <button class="preset-btn" onclick="setCustomTime()" style="padding: 12px 24px;">
+                设置
+            </button>
+        </div>
+
+        <!-- 计时器显示 -->
+        <div class="timer-display" id="timerDisplay">25:00</div>
+
+        <!-- 控制按钮 -->
+        <div class="control-buttons">
+            <button class="control-btn start-btn" id="startBtn" onclick="startTimer()">
+                <i class="fas fa-play"></i>
+            </button>
+            <button class="control-btn pause-btn" id="pauseBtn" onclick="pauseTimer()" style="display: none;">
+                <i class="fas fa-pause"></i>
+            </button>
+            <button class="control-btn reset-btn" onclick="resetTimer()">
+                <i class="fas fa-redo"></i>
+            </button>
+        </div>
+
+        <!-- 励志语录 -->
+        <div class="motivational-quote" id="quote">
+            "专注是通往成功的唯一道路。"
+        </div>
+
+        <!-- 统计数据 -->
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="todaySessions">0</div>
+                <div class="stat-label">今日专注</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="todayMinutes">0</div>
+                <div class="stat-label">专注分钟</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalSessions">0</div>
+                <div class="stat-label">累计次数</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 背景音乐控制 -->
+    <div class="music-player">
+        <button class="music-btn" onclick="toggleMusic()">
+            <i class="fas fa-music" id="musicIcon"></i>
+        </button>
+        <span id="musicLabel">白噪音</span>
+    </div>
+
+    <!-- 音频元素（可选） -->
+    <audio id="bgMusic" loop>
+        <!-- 可以添加白噪音音频源 -->
+    </audio>
+
+    <script>
+        let timeLeft = 25 * 60; // 秒
+        let totalTime = 25 * 60;
+        let timerInterval = null;
+        let isRunning = false;
+        let sessionCount = 0;
+        let totalMinutes = 0;
+
+        const quotes = [
+            "专注是通往成功的唯一道路。",
+            "每一分钟的努力，都是未来的积累。",
+            "保持专注，你正在变得更好。",
+            "成功属于那些专注且坚持的人。",
+            "专注当下，未来自然美好。",
+            "你的专注时光，正在塑造更好的自己。",
+            "静下心来，专注眼前的事。",
+            "每一次专注，都是一次成长。"
+        ];
+
+        // 页面加载
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            updateQuote();
+        });
+
+        // 设置时间
+        function setTime(minutes) {
+            if (isRunning) {
+                if (!confirm('正在专注中，确定要切换吗？')) {
+                    return;
+                }
+                resetTimer();
+            }
+
+            totalTime = minutes * 60;
+            timeLeft = totalTime;
+            updateDisplay();
+
+            // 更新按钮状态
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.preset-btn')?.classList.add('active');
+        }
+
+        // 自定义时间
+        function setCustomTime() {
+            const minutes = parseInt(document.getElementById('customMinutes').value);
+            if (!minutes || minutes < 1 || minutes > 180) {
+                alert('请输入 1-180 之间的分钟数');
+                return;
+            }
+            setTime(minutes);
+        }
+
+        // 开始计时
+        function startTimer() {
+            if (isRunning) return;
+
+            isRunning = true;
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'flex';
+            document.getElementById('timerLabel').textContent = '专注中...';
+            document.getElementById('timerDisplay').classList.add('running');
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+
+                if (timeLeft <= 0) {
+                    completeSession();
+                }
+            }, 1000);
+        }
+
+        // 暂停计时
+        function pauseTimer() {
+            if (!isRunning) return;
+
+            isRunning = false;
+            clearInterval(timerInterval);
+            document.getElementById('startBtn').style.display = 'flex';
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('timerLabel').textContent = '已暂停';
+            document.getElementById('timerDisplay').classList.remove('running');
+        }
+
+        // 重置计时
+        function resetTimer() {
+            if (isRunning && !confirm('确定要重置计时器吗？')) {
+                return;
+            }
+
+            isRunning = false;
+            clearInterval(timerInterval);
+            timeLeft = totalTime;
+            updateDisplay();
+
+            document.getElementById('startBtn').style.display = 'flex';
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('timerLabel').textContent = '选择专注时长';
+            document.getElementById('timerDisplay').classList.remove('running');
+        }
+
+        // 完成一次专注
+        function completeSession() {
+            isRunning = false;
+            clearInterval(timerInterval);
+
+            // 播放完成音效（可选）
+            playCompletionSound();
+
+            // 更新统计
+            sessionCount++;
+            const minutes = Math.floor(totalTime / 60);
+            totalMinutes += minutes;
+
+            // 保存到本地存储
+            saveStats();
+
+            // 显示完成提示
+            document.getElementById('timerLabel').textContent = '🎉 专注完成！';
+            document.getElementById('timerDisplay').textContent = '00:00';
+            document.getElementById('timerDisplay').classList.remove('running');
+
+            alert(`恭喜完成 ${minutes} 分钟的专注！\n\n今日已完成 ${sessionCount} 次专注，共 ${totalMinutes} 分钟。`);
+
+            // 重置计时器
+            setTimeout(() => {
+                resetTimer();
+                updateQuote();
+            }, 2000);
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // 更新励志语录
+        function updateQuote() {
+            const quote = quotes[Math.floor(Math.random() * quotes.length)];
+            document.getElementById('quote').textContent = `"${quote}"`;
+        }
+
+        // 加载统计
+        function loadStats() {
+            const today = new Date().toDateString();
+            const savedDate = localStorage.getItem('studyroom_date');
+            
+            if (savedDate === today) {
+                sessionCount = parseInt(localStorage.getItem('studyroom_sessions') || '0');
+                totalMinutes = parseInt(localStorage.getItem('studyroom_minutes') || '0');
+            } else {
+                sessionCount = 0;
+                totalMinutes = 0;
+                localStorage.setItem('studyroom_date', today);
+            }
+
+            const totalSessions = parseInt(localStorage.getItem('studyroom_total_sessions') || '0');
+
+            document.getElementById('todaySessions').textContent = sessionCount;
+            document.getElementById('todayMinutes').textContent = totalMinutes;
+            document.getElementById('totalSessions').textContent = totalSessions;
+        }
+
+        // 保存统计
+        function saveStats() {
+            localStorage.setItem('studyroom_sessions', sessionCount);
+            localStorage.setItem('studyroom_minutes', totalMinutes);
+            
+            const totalSessions = parseInt(localStorage.getItem('studyroom_total_sessions') || '0');
+            localStorage.setItem('studyroom_total_sessions', totalSessions + 1);
+
+            loadStats();
+        }
+
+        // 切换音乐
+        function toggleMusic() {
+            const audio = document.getElementById('bgMusic');
+            const icon = document.getElementById('musicIcon');
+            
+            if (audio.paused) {
+                // 这里可以设置白噪音音频源
+                // audio.src = 'path/to/white-noise.mp3';
+                // audio.play();
+                icon.className = 'fas fa-volume-up';
+                alert('白噪音功能待接入音频资源');
+            } else {
+                audio.pause();
+                icon.className = 'fas fa-music';
+            }
+        }
+
+        // 播放完成音效
+        function playCompletionSound() {
+            // 可以添加完成音效
+            // const audio = new Audio('path/to/completion.mp3');
+            // audio.play();
+        }
+
+        // 返回
+        function goBack() {
+            if (isRunning && !confirm('正在专注中，确定要离开吗？')) {
+                return;
+            }
+            window.location.href = 'student-dashboard.html';
+        }
+
+        // 页面关闭前提示
+        window.addEventListener('beforeunload', (e) => {
+            if (isRunning) {
+                e.preventDefault();
+                e.returnValue = '正在专注中，确定要离开吗？';
+            }
+        });
+    </script>
+</body>
+</html>
+
+
