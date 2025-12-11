@@ -115,11 +115,11 @@ class API {
 
       // 如果已经有 status 属性，说明是已处理的错误
       if (error.status !== undefined) {
-        if (error.status === 401) {
-          // Token过期，清除登录状态
-          this.setToken(null);
-          localStorage.removeItem(CONFIG.STORAGE_KEYS.USER);
-          window.location.reload();
+      if (error.status === 401) {
+        // Token过期，清除登录状态
+        this.setToken(null);
+        localStorage.removeItem(CONFIG.STORAGE_KEYS.USER);
+        window.location.reload();
         }
       }
 
