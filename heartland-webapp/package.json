@@ -1,0 +1,9 @@
+{
+  "name": "heartland-webapp",
+  "version": "1.0.0",
+  "description": "心屿学院前端应用",
+  "scripts": {
+    "build": "echo 'No build step needed for static files'"
+  }
+}
+
