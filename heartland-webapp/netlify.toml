@@ -2,6 +2,9 @@
   publish = "."
   command = ""
 
+[git]
+  submodules = false
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
