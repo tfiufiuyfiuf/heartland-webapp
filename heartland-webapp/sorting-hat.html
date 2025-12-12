@@ -488,6 +488,12 @@
 
             const duration = Math.floor((Date.now() - startTime) / 1000);
 
+            // 确保 token 已加载
+            const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+            if (token) {
+                api.setToken(token);
+            }
+
             try {
                 const response = await api.post('/sorting/submit', {
                     answers,
