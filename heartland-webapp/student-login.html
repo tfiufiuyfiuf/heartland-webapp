@@ -65,54 +65,159 @@
         };
         Object.freeze(CONFIG);
     </script>
-    <script src="/frontend/api.js"></script>
     <script>
-        // 如果 api.js 加载失败，创建基础 API 类
-        if (typeof api === 'undefined') {
-            console.warn('api.js 未加载，使用基础 API 实现');
-            class API {
-                constructor() {
-                    this.baseURL = CONFIG.API.BASE_URL;
-                    this.timeout = CONFIG.API.TIMEOUT;
-                    this.token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+        // 完整的内联 API 实现（避免外部文件加载问题）
+        class API {
+            constructor() {
+                this.baseURL = CONFIG.API.BASE_URL;
+                this.timeout = CONFIG.API.TIMEOUT;
+                this.token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+            }
+            setToken(token) {
+                this.token = token;
+                if (token) {
+                    localStorage.setItem(CONFIG.STORAGE_KEYS.TOKEN, token);
+                } else {
+                    localStorage.removeItem(CONFIG.STORAGE_KEYS.TOKEN);
                 }
-                setToken(token) {
-                    this.token = token;
-                    if (token) localStorage.setItem(CONFIG.STORAGE_KEYS.TOKEN, token);
-                    else localStorage.removeItem(CONFIG.STORAGE_KEYS.TOKEN);
+            }
+            getHeaders(includeAuth = true) {
+                const headers = { 'Content-Type': 'application/json' };
+                if (includeAuth && this.token) {
+                    headers['Authorization'] = `Bearer ${this.token}`;
                 }
-                getHeaders(includeAuth = true) {
-                    const headers = { 'Content-Type': 'application/json' };
-                    if (includeAuth && this.token) headers['Authorization'] = `Bearer ${this.token}`;
-                    return headers;
+                return headers;
+            }
+            async request(endpoint, options = {}) {
+                const url = `${this.baseURL}${endpoint}`;
+                const config = {
+                    method: options.method || 'GET',
+                    headers: this.getHeaders(options.auth !== false),
+                    ...options
+                };
+                if (options.body) {
+                    config.body = JSON.stringify(options.body);
                 }
-                async request(endpoint, options = {}) {
-                    const url = `${this.baseURL}${endpoint}`;
-                    const config = {
-                        method: options.method || 'GET',
-                        headers: this.getHeaders(options.auth !== false),
-                        ...options
-                    };
-                    if (options.body) config.body = JSON.stringify(options.body);
+                try {
                     const response = await fetch(url, config);
                     if (!response.ok) {
                         const data = await response.json().catch(() => ({}));
-                        throw { status: response.status, message: data.message || '请求失败', data };
+                        throw {
+                            status: response.status,
+                            message: data.message || data.error || '请求失败',
+                            data,
+                            success: false
+                        };
                     }
-                    return await response.json();
-                }
-                post(endpoint, body, auth = true) {
-                    return this.request(endpoint, { method: 'POST', body, auth });
-                }
-                register(data) { return this.post('/auth/register', data, false); }
-                login(identifier, password) {
-                    if (typeof identifier === 'object') return this.post('/auth/login', identifier, false);
-                    const isPhone = /^1[3-9]\d{9}$/.test(identifier);
-                    return this.post('/auth/login', isPhone ? { phone: identifier, password } : { username: identifier, password }, false);
+                    const data = await response.json();
+                    return { success: true, data, ...data };
+                } catch (error) {
+                    if (error.status !== undefined) throw error;
+                    throw {
+                        status: 0,
+                        message: error.message || '网络连接失败',
+                        success: false,
+                        data: null
+                    };
                 }
             }
-            const api = new API();
+            get(endpoint, params = {}) {
+                const query = new URLSearchParams(params).toString();
+                const url = query ? `${endpoint}?${query}` : endpoint;
+                return this.request(url, { method: 'GET' });
+            }
+            post(endpoint, body, auth = true) {
+                return this.request(endpoint, { method: 'POST', body, auth });
+            }
+            put(endpoint, body) {
+                return this.request(endpoint, { method: 'PUT', body });
+            }
+            delete(endpoint) {
+                return this.request(endpoint, { method: 'DELETE' });
+            }
+            // 认证相关
+            sendCode(phone) {
+                return this.post('/auth/send-code', { phone }, false);
+            }
+            register(data) {
+                return this.post('/auth/register', data, false);
+            }
+            login(identifier, password) {
+                if (typeof identifier === 'object') {
+                    return this.post('/auth/login', identifier, false);
+                }
+                const isPhone = /^1[3-9]\d{9}$/.test(identifier);
+                const body = isPhone ? { phone: identifier, password } : { username: identifier, password };
+                return this.post('/auth/login', body, false);
+            }
+            verifyToken() {
+                return this.get('/auth/verify');
+            }
+            // 用户相关
+            getCurrentUser() {
+                return this.get('/users/me');
+            }
+            updateUser(data) {
+                return this.put('/users/me', data);
+            }
+            updateProfile(data) {
+                return this.put('/users/profile', data);
+            }
+            getUserStats() {
+                return this.get('/users/stats');
+            }
+            recordFocus(data) {
+                return this.post('/users/focus', data);
+            }
+            // 情绪追踪
+            createMoodRecord(data) {
+                return this.post('/mood', data);
+            }
+            getMoodRecords(params = {}) {
+                return this.get('/mood', params);
+            }
+            getMoodStats(days = 7) {
+                return this.get('/mood/stats', { days });
+            }
+            deleteMoodRecord(id) {
+                return this.delete(`/mood/${id}`);
+            }
+            // 课程相关
+            getCourses(params = {}) {
+                return this.get('/courses', params);
+            }
+            getCourse(id) {
+                return this.get(`/courses/${id}`);
+            }
+            updateCourseProgress(courseId, chapterId, data) {
+                return this.post(`/courses/${courseId}/chapters/${chapterId}/progress`, data);
+            }
+            getMyProgress() {
+                return this.get('/courses/my/progress');
+            }
+            // 社区相关
+            getPosts(params = {}) {
+                return this.get('/posts', params);
+            }
+            getPost(id) {
+                return this.get(`/posts/${id}`);
+            }
+            createPost(data) {
+                return this.post('/posts', data);
+            }
+            commentPost(postId, data) {
+                return this.post(`/posts/${postId}/comments`, data);
+            }
+            toggleLike(postId) {
+                return this.post(`/posts/${postId}/like`);
+            }
+            deletePost(id) {
+                return this.delete(`/posts/${id}`);
+            }
         }
+        // 创建全局 API 实例
+        const api = new API();
+        console.log('API 已初始化，Base URL:', api.baseURL);
     </script>
     
     <style>
