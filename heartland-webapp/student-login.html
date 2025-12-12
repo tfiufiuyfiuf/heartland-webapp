@@ -543,9 +543,9 @@
                         return;
                     }
 
-                    // 保存用户信息
-                    localStorage.setItem('token', response.data.token);
-                    localStorage.setItem('user', JSON.stringify(response.data.user));
+                    // 保存用户信息和token（使用api.setToken确保一致性）
+                    api.setToken(response.data.token);
+                    localStorage.setItem(CONFIG.STORAGE_KEYS.USER, JSON.stringify(response.data.user));
                     currentUser = response.data.user;
 
                     showToast('登录成功！', 'success');
@@ -632,9 +632,9 @@
                 if (response.success) {
                     showToast('注册成功！正在自动登录...', 'success');
 
-                    // 保存用户信息
-                    localStorage.setItem('token', response.data.token);
-                    localStorage.setItem('user', JSON.stringify(response.data.user));
+                    // 保存用户信息和token（使用api.setToken确保一致性）
+                    api.setToken(response.data.token);
+                    localStorage.setItem(CONFIG.STORAGE_KEYS.USER, JSON.stringify(response.data.user));
                     currentUser = response.data.user;
 
                     setTimeout(() => {
