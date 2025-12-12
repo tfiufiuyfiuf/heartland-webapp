@@ -488,17 +488,23 @@
 
             const duration = Math.floor((Date.now() - startTime) / 1000);
 
-            // 确保 token 已加载
+            // 确保 token 已加载并设置到 API 实例
             const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
-            if (token) {
-                api.setToken(token);
+            if (!token) {
+                alert('未找到登录信息，请先登录');
+                window.location.href = 'student-login.html';
+                return;
             }
+            
+            // 强制设置 token 到 API 实例
+            api.setToken(token);
+            console.log('提交前确认 token:', token ? '已设置' : '未设置');
 
             try {
                 const response = await api.post('/sorting/submit', {
                     answers,
                     duration
-                });
+                }, true); // 确保使用认证
 
                 if (response.success) {
                     showResult(response.data);
@@ -540,8 +546,39 @@
         }
 
         // 页面加载完成
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 确保 API 和 CONFIG 已加载
+            if (typeof CONFIG === 'undefined') {
+                console.error('CONFIG 未定义，请刷新页面');
+                alert('页面加载失败，请刷新重试');
+                return;
+            }
+            
+            // 确保 API 已加载，如果未加载则等待或创建
+            if (typeof api === 'undefined') {
+                console.error('api 未定义，请检查网络连接');
+                alert('API 加载失败，请刷新页面重试');
+                return;
+            }
+            
+            // 从 localStorage 读取 token 并设置到 API 实例
+            const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+            if (token) {
+                api.setToken(token);
+                console.log('Token 已加载到 API 实例');
+            } else {
+                console.warn('未找到 token，可能需要先登录');
+            }
+            
             createStars();
+            
+            // 加载题目
+            try {
+                await loadQuestions();
+            } catch (error) {
+                console.error('加载题目失败:', error);
+                alert('加载题目失败，请刷新页面重试');
+            }
         });
     </script>
 </body>
