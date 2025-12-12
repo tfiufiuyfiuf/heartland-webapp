@@ -4,3 +4,8 @@
 
 [git]
   submodules = false
+  requireSubmodules = false
+
+[functions]
+  directory = ""
+
