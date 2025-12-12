@@ -1,6 +1,0 @@
-backend
-../backend
-**/backend
-*.md
-.git
-.gitignore
