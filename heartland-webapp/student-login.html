@@ -7,8 +7,113 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- API配置和封装 -->
-    <script src="./frontend/config.js"></script>
-    <script src="./frontend/api.js"></script>
+    <script>
+        // 内联 config.js 内容，确保加载
+        const CONFIG = {
+          API: {
+            DEV_BASE_URL: 'http://localhost:3000/api',
+            PROD_BASE_URL: 'https://heartland-backend.vercel.app/api',
+            BASE_URL: 'https://heartland-backend.onrender.com/api',
+            TIMEOUT: 15000,
+            RETRY_TIMES: 3
+          },
+          STORAGE_KEYS: {
+            TOKEN: 'heartland_token',
+            USER: 'heartland_user',
+            CURRENT_ROLE: 'current_role',
+            USER_PROFILE: 'user_profile',
+            MOOD_RECORDS: 'mood_records',
+            FOCUS_RECORDS: 'focus_records',
+            SETTINGS: 'heartland_settings'
+          },
+          APP: {
+            NAME: '心屿学院',
+            VERSION: '1.0.0',
+            DESCRIPTION: '青少年心理健康学习平台',
+            COPYRIGHT: '© 2024 心屿学院. All rights reserved.',
+            PAGE_SIZE: 20,
+            MAX_FILE_SIZE: 5,
+            ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+            VERIFICATION_CODE_LENGTH: 6,
+            VERIFICATION_CODE_EXPIRE: 300
+          },
+          HOUSES: {
+            gryffindor: { name: '格兰芬多', color: '#740001', emoji: '🦁', traits: ['勇敢', '勇气', '骑士精神'] },
+            slytherin: { name: '斯莱特林', color: '#1A472A', emoji: '🐍', traits: ['野心', '精明', '领导力'] },
+            ravenclaw: { name: '拉文克劳', color: '#0E1A40', emoji: '🦅', traits: ['智慧', '创造力', '学识'] },
+            hufflepuff: { name: '赫奇帕奇', color: '#FFDB00', emoji: '🦡', traits: ['忠诚', '勤劳', '正直'] }
+          },
+          MOOD_TYPES: {
+            happy: { name: '开心', emoji: '😊', color: '#FFD93D' },
+            sad: { name: '难过', emoji: '😢', color: '#6B9BD1' },
+            anxious: { name: '焦虑', emoji: '😰', color: '#F97068' },
+            angry: { name: '生气', emoji: '😠', color: '#E63946' },
+            calm: { name: '平静', emoji: '😌', color: '#A8DADC' },
+            excited: { name: '兴奋', emoji: '🤩', color: '#F77F00' },
+            tired: { name: '疲惫', emoji: '😴', color: '#8D99AE' },
+            stressed: { name: '压力', emoji: '😣', color: '#E5989B' }
+          },
+          REGEX: {
+            PHONE: /^1[3-9]\d{9}$/,
+            EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            PASSWORD: /^.{6,}$/,
+            USERNAME: /^[\u4e00-\u9fa5a-zA-Z0-9_]{2,20}$/
+          },
+          DEBUG: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+          SHOW_DETAILED_ERRORS: window.location.hostname === 'localhost',
+          AUTO_FILL_CODE: window.location.hostname === 'localhost' ? '123456' : null
+        };
+        Object.freeze(CONFIG);
+    </script>
+    <script src="/frontend/api.js"></script>
+    <script>
+        // 如果 api.js 加载失败，创建基础 API 类
+        if (typeof api === 'undefined') {
+            console.warn('api.js 未加载，使用基础 API 实现');
+            class API {
+                constructor() {
+                    this.baseURL = CONFIG.API.BASE_URL;
+                    this.timeout = CONFIG.API.TIMEOUT;
+                    this.token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+                }
+                setToken(token) {
+                    this.token = token;
+                    if (token) localStorage.setItem(CONFIG.STORAGE_KEYS.TOKEN, token);
+                    else localStorage.removeItem(CONFIG.STORAGE_KEYS.TOKEN);
+                }
+                getHeaders(includeAuth = true) {
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (includeAuth && this.token) headers['Authorization'] = `Bearer ${this.token}`;
+                    return headers;
+                }
+                async request(endpoint, options = {}) {
+                    const url = `${this.baseURL}${endpoint}`;
+                    const config = {
+                        method: options.method || 'GET',
+                        headers: this.getHeaders(options.auth !== false),
+                        ...options
+                    };
+                    if (options.body) config.body = JSON.stringify(options.body);
+                    const response = await fetch(url, config);
+                    if (!response.ok) {
+                        const data = await response.json().catch(() => ({}));
+                        throw { status: response.status, message: data.message || '请求失败', data };
+                    }
+                    return await response.json();
+                }
+                post(endpoint, body, auth = true) {
+                    return this.request(endpoint, { method: 'POST', body, auth });
+                }
+                register(data) { return this.post('/auth/register', data, false); }
+                login(identifier, password) {
+                    if (typeof identifier === 'object') return this.post('/auth/login', identifier, false);
+                    const isPhone = /^1[3-9]\d{9}$/.test(identifier);
+                    return this.post('/auth/login', isPhone ? { phone: identifier, password } : { username: identifier, password }, false);
+                }
+            }
+            const api = new API();
+        }
+    </script>
     
     <style>
         * {
@@ -441,6 +546,16 @@
 
         // ================ 后端连接诊断 ================
         async function testBackendConnection() {
+            // 检查 CONFIG 和 api 是否已加载
+            if (typeof CONFIG === 'undefined') {
+                console.error('❌ CONFIG 未定义，config.js 可能未加载成功');
+                return false;
+            }
+            if (typeof api === 'undefined') {
+                console.error('❌ api 未定义，api.js 可能未加载成功');
+                return false;
+            }
+            
             console.log('=== 后端连接诊断 ===');
             console.log('配置的 API BASE_URL:', CONFIG?.API?.BASE_URL || '未配置');
             console.log('实际使用的 baseURL:', api?.baseURL || '未初始化');
@@ -619,6 +734,11 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>注册中...</span>';
 
             try {
+                // 确保 api 已初始化
+                if (typeof api === 'undefined') {
+                    throw new Error('API 未初始化，请刷新页面重试');
+                }
+                
                 const registerData = {
                     phone,
                     username,
