@@ -776,6 +776,20 @@
                 span.style.borderColor = houseInfo.color;
                 traitsContainer.appendChild(span);
             });
+            
+            // 更新 localStorage 中的用户信息，标记已完成分院测试
+            try {
+                const userStr = localStorage.getItem(CONFIG.STORAGE_KEYS.USER);
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    user.sorting_completed = true;
+                    user.house = data.house;
+                    localStorage.setItem(CONFIG.STORAGE_KEYS.USER, JSON.stringify(user));
+                    console.log('已更新用户信息：分院测试完成');
+                }
+            } catch (error) {
+                console.error('更新用户信息失败:', error);
+            }
         }
 
         // 继续到主应用
