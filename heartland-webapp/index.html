@@ -5,11 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>心屿学院 - 正在跳转...</title>
     <script>
-        // 立即跳转到登录页
-        window.location.href = './student-login.html';
+        // 检查登录状态并跳转
+        (function() {
+            const token = localStorage.getItem('heartland_token');
+            const userStr = localStorage.getItem('heartland_user');
+            
+            if (token && userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    // 已登录，检查是否完成分院测试
+                    if (user.role === 'student') {
+                        if (user.sorting_completed) {
+                            // 已完成分院测试，跳转到学生主页
+                            window.location.href = './student-dashboard.html';
+                        } else {
+                            // 未完成分院测试，跳转到分院测试页面
+                            window.location.href = './sorting-hat.html';
+                        }
+                    } else {
+                        // 其他角色，跳转到登录页
+                        window.location.href = './student-login.html';
+                    }
+                } catch (e) {
+                    // 解析失败，跳转到登录页
+                    window.location.href = './student-login.html';
+                }
+            } else {
+                // 未登录，跳转到登录页
+                window.location.href = './student-login.html';
+            }
+        })();
     </script>
 </head>
 <body>
-    <p>正在跳转到登录页面... <a href="./student-login.html">点击这里</a></p>
+    <p>正在跳转... <a href="./student-login.html">点击这里手动跳转</a></p>
 </body>
 </html>

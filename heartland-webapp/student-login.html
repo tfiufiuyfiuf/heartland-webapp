@@ -955,9 +955,10 @@
                 }, 1500);
             } else {
                 showToast(`欢迎回来，${currentUser.username}！`, 'success');
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 1500);
+                setTimeout(() => {
+                    // 直接跳转到学生主页
+                    window.location.href = 'student-dashboard.html';
+                }, 1500);
             }
         }
 
