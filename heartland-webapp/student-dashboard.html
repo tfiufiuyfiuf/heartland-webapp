@@ -417,6 +417,14 @@
                     <i class="fas fa-users"></i>
                     <span>社区</span>
                 </div>
+                <div class="nav-item" onclick="showPage('treehole')">
+                    <i class="fas fa-tree"></i>
+                    <span>匿名树洞</span>
+                </div>
+                <div class="nav-item" onclick="showPage('library')">
+                    <i class="fas fa-book"></i>
+                    <span>图书馆</span>
+                </div>
                 <div class="nav-item" onclick="window.location.href='study-room.html'">
                     <i class="fas fa-book-reader"></i>
                     <span>自习室</span>
@@ -623,8 +631,60 @@
 
                     <div class="page-content" id="page-community">
                         <div class="card">
-                            <h2 class="card-title">社区</h2>
-                            <p>社区功能开发中...</p>
+                            <h2 class="card-title">
+                                <i class="fas fa-users"></i> 社区
+                            </h2>
+                            <div id="communityContent">
+                                <p style="color: #7f8c8d; margin-bottom: 20px;">与同学们一起交流讨论，分享学习心得</p>
+                                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                                    <p style="color: #95a5a6;">社区功能开发中，敬请期待...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 匿名树洞页面 -->
+                    <div class="page-content" id="page-treehole">
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fas fa-tree"></i> 匿名树洞
+                            </h2>
+                            <div style="margin-bottom: 20px;">
+                                <textarea id="treeholeInput" placeholder="在这里匿名分享你的心情、烦恼或想法..." 
+                                    style="width: 100%; min-height: 120px; padding: 15px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 15px; font-family: inherit; resize: vertical;"></textarea>
+                                <button class="btn btn-primary" onclick="submitTreehole()" style="margin-top: 15px;">
+                                    <i class="fas fa-paper-plane"></i> 匿名发布
+                                </button>
+                            </div>
+                            <div id="treeholeList">
+                                <p style="color: #95a5a6; text-align: center; padding: 40px;">树洞里还很安静，快来分享你的心情吧 🌳</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 图书馆页面 -->
+                    <div class="page-content" id="page-library">
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fas fa-book"></i> 图书馆
+                            </h2>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">
+                                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; cursor: pointer;" onclick="openBook('1')">
+                                    <div style="font-size: 48px; margin-bottom: 10px;">📖</div>
+                                    <h3 style="font-size: 16px; margin-bottom: 5px;">心理健康指南</h3>
+                                    <p style="color: #7f8c8d; font-size: 14px;">了解心理健康知识</p>
+                                </div>
+                                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; cursor: pointer;" onclick="openBook('2')">
+                                    <div style="font-size: 48px; margin-bottom: 10px;">📚</div>
+                                    <h3 style="font-size: 16px; margin-bottom: 5px;">情绪管理</h3>
+                                    <p style="color: #7f8c8d; font-size: 14px;">学会管理自己的情绪</p>
+                                </div>
+                                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; cursor: pointer;" onclick="openBook('3')">
+                                    <div style="font-size: 48px; margin-bottom: 10px;">💝</div>
+                                    <h3 style="font-size: 16px; margin-bottom: 5px;">人际交往</h3>
+                                    <p style="color: #7f8c8d; font-size: 14px;">提升人际交往能力</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -899,6 +959,65 @@
             if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
             if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
             return `${Math.floor(diff / 86400)}天前`;
+        }
+
+        // 加载树洞消息
+        async function loadTreeholeMessages() {
+            try {
+                const response = await api.getTreeholeMessages({ limit: 20 });
+                if (response.success && response.data) {
+                    const messages = response.data.messages || [];
+                    const container = document.getElementById('treeholeList');
+                    
+                    if (messages.length === 0) {
+                        container.innerHTML = '<p style="color: #95a5a6; text-align: center; padding: 40px;">树洞里还很安静，快来分享你的心情吧 🌳</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = messages.map(msg => `
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--primary-color);">
+                            <div style="color: #7f8c8d; margin-bottom: 10px; font-size: 14px;">
+                                ${msg.mood ? `心情：${msg.mood} | ` : ''}${getTimeAgo(new Date(msg.created_at))}
+                            </div>
+                            <div style="line-height: 1.8; color: var(--dark-color);">${msg.content}</div>
+                            ${msg.replies_count > 0 ? `<div style="margin-top: 10px; color: #7f8c8d; font-size: 14px;">💬 ${msg.replies_count} 条回复</div>` : ''}
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('加载树洞消息失败:', error);
+                document.getElementById('treeholeList').innerHTML = '<p style="color: #e74c3c; text-align: center; padding: 20px;">加载失败，请稍后重试</p>';
+            }
+        }
+
+        // 提交树洞消息
+        async function submitTreehole() {
+            const input = document.getElementById('treeholeInput');
+            const content = input.value.trim();
+            
+            if (!content) {
+                alert('请输入内容');
+                return;
+            }
+            
+            try {
+                const response = await api.createTreeholeMessage({ content });
+                if (response.success) {
+                    input.value = '';
+                    alert('发布成功！');
+                    loadTreeholeMessages();
+                } else {
+                    alert(response.message || '发布失败');
+                }
+            } catch (error) {
+                console.error('发布树洞消息失败:', error);
+                alert('发布失败，请稍后重试');
+            }
+        }
+
+        // 打开图书
+        function openBook(bookId) {
+            alert(`打开图书 ID: ${bookId}\n\n图书阅读功能开发中，敬请期待...`);
         }
     </script>
 </body>
