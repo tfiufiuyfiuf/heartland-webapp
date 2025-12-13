@@ -961,16 +961,26 @@
                 const response = await api.register(registerData);
 
                 if (response.success) {
-                    showToast('注册成功！正在自动登录...', 'success');
-
-                    // 保存用户信息
+                    // 保存用户信息（使用统一的存储key）
+                    localStorage.setItem('heartland_token', response.data.token);
+                    localStorage.setItem('heartland_user', JSON.stringify(response.data.user));
+                    // 兼容旧版本
                     localStorage.setItem('token', response.data.token);
                     localStorage.setItem('user', JSON.stringify(response.data.user));
                     currentUser = response.data.user;
-
-                    setTimeout(() => {
-                        showApp();
-                    }, 1000);
+                    
+                    // 如果是学生且未完成分院测试，跳转到分院测试
+                    if (currentUser.role === 'student' && !currentUser.sorting_completed) {
+                        showToast('注册成功！让我们先完成分院测试...', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'sorting-hat.html';
+                        }, 1500);
+                    } else {
+                        showToast('注册成功！正在自动登录...', 'success');
+                        setTimeout(() => {
+                            showApp();
+                        }, 1000);
+                    }
                 } else {
                     showToast(response.message || '注册失败', 'error');
                 }
