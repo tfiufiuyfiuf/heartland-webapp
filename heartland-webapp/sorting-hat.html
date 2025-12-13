@@ -650,14 +650,15 @@
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
                 btn.textContent = option.text;
-                btn.dataset.optionId = option.id;
+                btn.dataset.optionId = option.id; // 使用唯一ID
                 
-                // 恢复之前的选择
+                // 恢复之前的选择（使用唯一ID匹配）
                 if (answers[index]?.optionId === option.id) {
                     btn.classList.add('selected');
                 }
                 
-                btn.onclick = () => selectOption(optionIndex, option.id);
+                // 使用唯一ID而不是索引
+                btn.onclick = () => selectOption(option.id, option.text);
                 optionsContainer.appendChild(btn);
             });
             
@@ -668,8 +669,8 @@
             document.getElementById('nextBtn').disabled = !answers[index];
         }
 
-        // 选择选项
-        function selectOption(optionIndex, optionId) {
+        // 选择选项（使用唯一ID）
+        function selectOption(optionId, optionText) {
             // 移除之前的选择
             document.querySelectorAll('.option-btn').forEach(btn => {
                 btn.classList.remove('selected');
@@ -678,10 +679,10 @@
             // 添加当前选择
             event.target.classList.add('selected');
             
-            // 保存答案
+            // 保存答案（使用唯一ID，不是索引）
             answers[currentQuestionIndex] = {
                 questionId: questions[currentQuestionIndex].id,
-                optionId: optionId
+                optionId: optionId // 这是唯一标识符，不是索引
             };
             
             // 启用下一题按钮
