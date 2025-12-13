@@ -842,14 +842,21 @@
 
         // ================ 页面初始化 ================
         window.addEventListener('DOMContentLoaded', async () => {
-            // 检查是否已登录
-            const token = localStorage.getItem('token');
-            if (token) {
+            // 检查是否已登录（兼容新旧两种存储key）
+            const token = localStorage.getItem('heartland_token') || localStorage.getItem('token');
+            const userKey = localStorage.getItem('heartland_user') || localStorage.getItem('user');
+            
+            if (token && userKey) {
                 try {
                     // 验证 token 是否有效
-                    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                    const userData = JSON.parse(userKey);
                     if (userData.id) {
                         currentUser = userData;
+                        // 如果是学生角色且未完成分院测试，跳转到分院测试
+                        if (userData.role === 'student' && !userData.sorting_completed) {
+                            window.location.href = 'sorting-hat.html';
+                            return;
+                        }
                         showApp();
                     } else {
                         showAuth();
@@ -890,15 +897,26 @@
                 const response = await api.login({ username, password });
 
                 if (response.success) {
-                    // 保存用户信息
+                    // 保存用户信息（使用统一的存储key）
+                    localStorage.setItem('heartland_token', response.data.token);
+                    localStorage.setItem('heartland_user', JSON.stringify(response.data.user));
+                    // 兼容旧版本
                     localStorage.setItem('token', response.data.token);
                     localStorage.setItem('user', JSON.stringify(response.data.user));
                     currentUser = response.data.user;
 
-                    showToast('登录成功！', 'success');
-                    setTimeout(() => {
-                        showApp();
-                    }, 500);
+                    // 如果是学生且未完成分院测试，跳转到分院测试
+                    if (currentUser.role === 'student' && !currentUser.sorting_completed) {
+                        showToast('登录成功！让我们先完成分院测试...', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'sorting-hat.html';
+                        }, 1500);
+                    } else {
+                        showToast('登录成功！', 'success');
+                        setTimeout(() => {
+                            showApp();
+                        }, 500);
+                    }
                 } else {
                     showToast(response.message || '登录失败', 'error');
                 }
