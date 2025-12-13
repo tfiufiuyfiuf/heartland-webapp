@@ -6525,7 +6525,22 @@ window.addEventListener('unhandledrejection', function(e) {
             // 页面加载时检查登录状态
             window.addEventListener('DOMContentLoaded', async function() {
                 if (userManager.token) {
-                    await userManager.checkLoginStatus();
+                    const isLoggedIn = await userManager.checkLoginStatus();
+                    if (isLoggedIn && userManager.currentUser) {
+                        // 如果是学生且未完成分院测试，跳转到分院测试
+                        if (userManager.currentUser.role === 'student' && !userManager.currentUser.sorting_completed) {
+                            window.location.href = 'heartland-webapp/sorting-hat.html';
+                            return;
+                        }
+                        // 已登录且完成分院测试，隐藏登录界面
+                        document.getElementById('auth-modal').style.display = 'none';
+                    } else {
+                        // 如果token无效，跳转到登录页
+                        window.location.href = 'heartland-webapp/student-login.html';
+                    }
+                } else {
+                    // 如果没有token，跳转到登录页
+                    window.location.href = 'heartland-webapp/student-login.html';
                 }
             });
 
