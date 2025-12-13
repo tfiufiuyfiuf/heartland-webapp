@@ -791,6 +791,8 @@
                 courses: '课程中心',
                 ai: 'AI 助教',
                 community: '社区',
+                treehole: '匿名树洞',
+                library: '图书馆',
                 'study-room': '自习室',
                 breathing: '呼吸训练',
                 profile: '个人中心',
@@ -802,7 +804,15 @@
             document.querySelectorAll('.page-content').forEach(page => {
                 page.classList.remove('active');
             });
-            document.getElementById(`page-${pageName}`)?.classList.add('active');
+            const targetPage = document.getElementById(`page-${pageName}`);
+            if (targetPage) {
+                targetPage.classList.add('active');
+                
+                // 如果是树洞页面，加载数据
+                if (pageName === 'treehole') {
+                    loadTreeholeMessages();
+                }
+            }
 
             // 加载页面数据
             if (pageName === 'profile') {
