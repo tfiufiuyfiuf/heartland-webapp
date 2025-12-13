@@ -16,8 +16,8 @@
                     // 已登录，检查是否完成分院测试
                     if (user.role === 'student') {
                         if (user.sorting_completed) {
-                            // 已完成分院测试，跳转到完整功能主页（包含所有功能）
-                            window.location.href = './student-dashboard.html';
+                            // 已完成分院测试，跳转到原始完整版本主页
+                            window.location.href = '../index.html';
                         } else {
                             // 未完成分院测试，跳转到分院测试页面
                             window.location.href = './sorting-hat.html';
