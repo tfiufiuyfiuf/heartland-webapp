@@ -1031,11 +1031,13 @@
 
         function handleLogout() {
             if (confirm('确定要退出登录吗？')) {
+                // 清理所有存储的登录信息
+                localStorage.removeItem('heartland_token');
+                localStorage.removeItem('heartland_user');
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 currentUser = null;
-                showAuth();
-                showToast('已退出登录', 'success');
+                window.location.href = 'student-login.html';
             }
         }
 
